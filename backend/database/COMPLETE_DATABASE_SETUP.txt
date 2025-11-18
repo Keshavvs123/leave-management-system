@@ -1,0 +1,320 @@
+-- =====================================================
+-- LEAVE MANAGEMENT SYSTEM - COMPLETE DATABASE SETUP
+-- =====================================================
+
+-- =====================================================
+-- PART 1: DATABASE & TABLE CREATION (DDL)
+-- =====================================================
+
+-- Create Database
+CREATE DATABASE IF NOT EXISTS lms;
+USE lms;
+
+-- Table: Login (User credentials)
+CREATE TABLE Login (
+    login_id INT PRIMARY KEY AUTO_INCREMENT,
+    login_username VARCHAR(100) UNIQUE NOT NULL,
+    login_password VARCHAR(255) NOT NULL
+);
+
+-- Table: User (User profiles)
+CREATE TABLE User (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_name VARCHAR(100) NOT NULL,
+    user_mobile VARCHAR(20),
+    user_email VARCHAR(100) NOT NULL,
+    user_address VARCHAR(200),
+    login_id INT,
+    FOREIGN KEY (login_id) REFERENCES Login(login_id) ON DELETE CASCADE
+);
+
+-- Table: Roles (User roles - for future use)
+CREATE TABLE Roles (
+    role_id INT PRIMARY KEY AUTO_INCREMENT,
+    role_name VARCHAR(100) NOT NULL,
+    role_desc VARCHAR(200)
+);
+
+-- Table: Permission (User permissions - for future use)
+CREATE TABLE Permission (
+    per_id INT PRIMARY KEY AUTO_INCREMENT,
+    per_module VARCHAR(100),
+    per_name VARCHAR(100)
+);
+
+-- Table: Employee (Employee details)
+CREATE TABLE Employee (
+    emp_id INT PRIMARY KEY AUTO_INCREMENT,
+    emp_name VARCHAR(100) NOT NULL,
+    emp_mobile VARCHAR(20),
+    emp_email VARCHAR(100),
+    emp_pass VARCHAR(100),
+    emp_add VARCHAR(200),
+    user_id INT,
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+);
+
+-- Table: LeaveType (Types of leaves)
+CREATE TABLE LeaveType (
+    lvtype_id INT PRIMARY KEY AUTO_INCREMENT,
+    lvtype_name VARCHAR(100) NOT NULL,
+    lvtype_desc VARCHAR(200)
+);
+
+-- Table: LeaveMaster (Leave applications)
+CREATE TABLE LeaveMaster (
+    lv_id INT PRIMARY KEY AUTO_INCREMENT,
+    emp_id INT,
+    lvtype_id INT,
+    lv_desc VARCHAR(500),
+    lv_status VARCHAR(50) DEFAULT 'Pending',
+    lv_days INT,
+    start_date DATE,
+    end_date DATE,
+    FOREIGN KEY (emp_id) REFERENCES Employee(emp_id) ON DELETE CASCADE,
+    FOREIGN KEY (lvtype_id) REFERENCES LeaveType(lvtype_id) ON DELETE CASCADE
+);
+
+-- Table: Admin (Admin users)
+CREATE TABLE Admin (
+    admin_id INT PRIMARY KEY AUTO_INCREMENT,
+    admin_username VARCHAR(100) UNIQUE NOT NULL,
+    admin_password VARCHAR(255) NOT NULL,
+    admin_email VARCHAR(100),
+    admin_name VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create Indexes for performance
+CREATE INDEX idx_login_username ON Login(login_username);
+CREATE INDEX idx_user_email ON User(user_email);
+CREATE INDEX idx_employee_user_id ON Employee(user_id);
+CREATE INDEX idx_leave_emp_id ON LeaveMaster(emp_id);
+CREATE INDEX idx_leave_status ON LeaveMaster(lv_status);
+CREATE INDEX idx_admin_username ON Admin(admin_username);
+CREATE INDEX idx_admin_email ON Admin(admin_email);
+
+-- =====================================================
+-- PART 2: INSERT SAMPLE DATA (DML)
+-- =====================================================
+
+-- Insert Leave Types
+INSERT INTO LeaveType (lvtype_name, lvtype_desc) VALUES
+('Casual Leave', 'Leave for personal work'),
+('Sick Leave', 'Leave due to illness'),
+('Encashment Leave', 'Leave that can be encashed');
+
+-- Insert Sample Login Users
+INSERT INTO Login (login_username, login_password) VALUES
+('john', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DvDSeO'),
+('alice', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DvDSeO'),
+('bob', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DvDSeO');
+
+-- Insert User Profiles
+INSERT INTO User (user_name, user_mobile, user_email, user_address, login_id) VALUES
+('John Doe', '9876543210', 'john@example.com', 'Mumbai', 1),
+('Alice Smith', '9123456789', 'alice@example.com', 'Delhi', 2),
+('Robert Brown', '9988776655', 'bob@example.com', 'Bangalore', 3);
+
+-- Insert Employees (linked to users)
+INSERT INTO Employee (emp_name, emp_mobile, emp_email, emp_pass, emp_add, user_id) VALUES
+('John Doe', '9876543210', 'john@example.com', 'password123', 'Mumbai', 1),
+('Alice Smith', '9123456789', 'alice@example.com', 'password123', 'Delhi', 2),
+('Robert Brown', '9988776655', 'bob@example.com', 'password123', 'Bangalore', 3);
+
+-- Insert Admin User
+INSERT INTO Admin (admin_username, admin_password, admin_email, admin_name) VALUES
+('admin', 'admin123', 'admin@example.com', 'Administrator');
+
+-- Insert Sample Leave Applications
+INSERT INTO LeaveMaster (emp_id, lvtype_id, lv_desc, lv_status, lv_days, start_date, end_date) VALUES
+(1, 1, 'Personal work', 'Pending', 3, '2025-11-10', '2025-11-12'),
+(2, 2, 'Sick leave', 'Approved', 2, '2025-11-08', '2025-11-09'),
+(3, 1, 'Vacation', 'Rejected', 5, '2025-11-15', '2025-11-19'),
+(1, 2, 'Medical checkup', 'Pending', 1, '2025-11-20', '2025-11-20');
+
+-- =====================================================
+-- PART 3: PRESENTATION QUERIES (SELECT QUERIES)
+-- =====================================================
+
+-- QUERY 1: Show all user data
+SELECT 
+    'QUERY 1: All Users' as query_name,
+    u.user_id,
+    u.user_name,
+    u.user_email,
+    u.user_mobile,
+    u.user_address,
+    l.login_username
+FROM User u
+LEFT JOIN Login l ON u.login_id = l.login_id;
+
+-- QUERY 2: Show all employee data
+SELECT 
+    'QUERY 2: All Employees' as query_name,
+    e.emp_id,
+    e.emp_name,
+    e.emp_email,
+    e.emp_mobile,
+    e.emp_add as address,
+    u.user_name
+FROM Employee e
+LEFT JOIN User u ON e.user_id = u.user_id;
+
+-- QUERY 3: Show all leave applications
+SELECT 
+    'QUERY 3: All Leave Applications' as query_name,
+    lm.lv_id,
+    e.emp_name,
+    lt.lvtype_name as leave_type,
+    lm.lv_desc as description,
+    lm.lv_days as days,
+    lm.lv_status as status,
+    lm.start_date,
+    lm.end_date
+FROM LeaveMaster lm
+LEFT JOIN Employee e ON lm.emp_id = e.emp_id
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+ORDER BY lm.lv_id DESC;
+
+-- QUERY 4: Show pending leave applications only
+SELECT 
+    'QUERY 4: Pending Leaves' as query_name,
+    lm.lv_id,
+    e.emp_name,
+    lt.lvtype_name,
+    lm.lv_days,
+    lm.start_date,
+    lm.end_date
+FROM LeaveMaster lm
+LEFT JOIN Employee e ON lm.emp_id = e.emp_id
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+WHERE lm.lv_status = 'Pending';
+
+-- QUERY 5: Show approved leaves
+SELECT 
+    'QUERY 5: Approved Leaves' as query_name,
+    lm.lv_id,
+    e.emp_name,
+    lt.lvtype_name,
+    lm.lv_days,
+    lm.start_date,
+    lm.end_date
+FROM LeaveMaster lm
+LEFT JOIN Employee e ON lm.emp_id = e.emp_id
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+WHERE lm.lv_status = 'Approved';
+
+-- QUERY 6: Show rejected leaves
+SELECT 
+    'QUERY 6: Rejected Leaves' as query_name,
+    lm.lv_id,
+    e.emp_name,
+    lt.lvtype_name,
+    lm.lv_days,
+    lm.start_date,
+    lm.end_date
+FROM LeaveMaster lm
+LEFT JOIN Employee e ON lm.emp_id = e.emp_id
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+WHERE lm.lv_status = 'Rejected';
+
+-- QUERY 7: Show admin users
+SELECT 
+    'QUERY 7: Admin Users' as query_name,
+    admin_id,
+    admin_username,
+    admin_name,
+    admin_email,
+    created_at
+FROM Admin;
+
+-- QUERY 8: Show leaves by specific employee
+SELECT 
+    'QUERY 8: Leaves by Employee (emp_id=1)' as query_name,
+    lm.lv_id,
+    e.emp_name,
+    lm.lv_desc,
+    lm.lv_days,
+    lm.lv_status,
+    lm.start_date,
+    lm.end_date,
+    lt.lvtype_name
+FROM LeaveMaster lm
+LEFT JOIN Employee e ON lm.emp_id = e.emp_id
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+WHERE lm.emp_id = 1;
+
+-- QUERY 9: Count leave applications by status
+SELECT 
+    'QUERY 9: Leave Count by Status' as query_name,
+    lv_status,
+    COUNT(*) as total
+FROM LeaveMaster
+GROUP BY lv_status;
+
+-- QUERY 10: Leave statistics by type
+SELECT 
+    'QUERY 10: Leave Statistics' as query_name,
+    lt.lvtype_name,
+    COUNT(lm.lv_id) as total_applied,
+    SUM(CASE WHEN lm.lv_status = 'Approved' THEN 1 ELSE 0 END) as approved,
+    SUM(CASE WHEN lm.lv_status = 'Pending' THEN 1 ELSE 0 END) as pending,
+    SUM(CASE WHEN lm.lv_status = 'Rejected' THEN 1 ELSE 0 END) as rejected
+FROM LeaveMaster lm
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+GROUP BY lt.lvtype_name;
+
+-- QUERY 11: Complete user-employee-leave relationship
+SELECT 
+    'QUERY 11: User-Employee-Leave Relationship' as query_name,
+    u.user_id,
+    u.user_name,
+    u.user_email,
+    e.emp_id,
+    e.emp_name,
+    e.emp_email,
+    COUNT(lm.lv_id) as total_leaves_applied
+FROM User u
+LEFT JOIN Employee e ON u.user_id = e.user_id
+LEFT JOIN LeaveMaster lm ON e.emp_id = lm.emp_id
+GROUP BY u.user_id, e.emp_id;
+
+-- QUERY 12: Show available leave types
+SELECT 
+    'QUERY 12: Leave Types Available' as query_name,
+    lvtype_id,
+    lvtype_name,
+    lvtype_desc
+FROM LeaveType;
+
+-- =====================================================
+-- BONUS QUERIES FOR ADVANCED PRESENTATION
+-- =====================================================
+
+-- BONUS 1: Total days of leave taken by each employee
+SELECT 
+    'BONUS 1: Total Days Taken per Employee' as query_name,
+    e.emp_name,
+    SUM(lm.lv_days) as total_days_taken,
+    COUNT(lm.lv_id) as total_applications
+FROM Employee e
+LEFT JOIN LeaveMaster lm ON e.emp_id = lm.emp_id
+GROUP BY e.emp_id, e.emp_name;
+
+-- BONUS 2: Employees with pending leaves
+SELECT 
+    'BONUS 2: Employees with Pending Leaves' as query_name,
+    e.emp_name,
+    COUNT(lm.lv_id) as pending_count,
+    SUM(lm.lv_days) as total_pending_days
+FROM Employee e
+LEFT JOIN LeaveMaster lm ON e.emp_id = lm.emp_id AND lm.lv_status = 'Pending'
+GROUP BY e.emp_id, e.emp_name
+HAVING pending_count > 0;
+
+-- BONUS 3: Show table structure
+DESC User;
+DESC Employee;
+DESC LeaveMaster;
+DESC Admin;

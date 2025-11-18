@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Leave Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      border-top: 4px solid #667eea;
+    }
+
+    .stat-number {
+      font-size: 36px;
+      font-weight: bold;
+      color: #667eea;
+      margin: 10px 0;
+    }
+
+    .stat-label {
+      color: #999;
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    table th {
+      background: #f5f5f5;
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #ddd;
+      color: #333;
+    }
+
+    table td {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    table tr:hover {
+      background: #f9f9f9;
+    }
+
+    button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.3s;
+      margin-right: 5px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <div class="navbar">
+      <h2>🔑 Admin Dashboard</h2>
+      <div class="nav-links">
+        <a href="admin-dashboard.html">Dashboard</a>
+        <a href="admin-employees.html">Employees</a>
+        <a href="admin-reports.html">Reports</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </div>
+    </div>
+
+    <div class="welcome-card">
+      <h1>Welcome Admin! 🎯</h1>
+      <p>Manage leave applications and approve/reject requests</p>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Leaves</div>
+        <div class="stat-number" id="totalLeaves">0</div>
+      </div>
+      <div class="stat-card" style="border-top-color: #ff9800;">
+        <div class="stat-label">Pending</div>
+        <div class="stat-number" id="pendingLeaves" style="color: #ff9800;">0</div>
+      </div>
+      <div class="stat-card" style="border-top-color: #4caf50;">
+        <div class="stat-label">Approved</div>
+        <div class="stat-number" id="approvedLeaves" style="color: #4caf50;">0</div>
+      </div>
+      <div class="stat-card" style="border-top-color: #f44336;">
+        <div class="stat-label">Rejected</div>
+        <div class="stat-number" id="rejectedLeaves" style="color: #f44336;">0</div>
+      </div>
+    </div>
+
+    <!-- Pending Leaves -->
+    <div class="card">
+      <h2>📋 Pending Leave Applications</h2>
+      <p style="color: #999; margin-bottom: 20px;">Review and approve/reject leave requests from employees</p>
+      <div id="pendingLeavesList" style="overflow-x: auto;"></div>
+    </div>
+  </div>
+
+    <!-- Add this after the welcome card -->
+<div class="card" style="background: #e3f2fd; border-left: 4px solid #2196F3; padding: 15px; margin-bottom: 20px;">
+  <button onclick="location.reload()" style="padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">🔄 Refresh</button>
+  <span style="margin-left: 10px; color: #666;">Auto-refreshes every 10 seconds</span>
+</div>
+
+
+  <script src="js/admin-dashboard.js"></script>
+</body>
+</html>

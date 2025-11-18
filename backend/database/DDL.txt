@@ -1,0 +1,87 @@
+-- Create Database
+CREATE DATABASE IF NOT EXISTS lms;
+USE lms;
+
+-- Table: Login
+CREATE TABLE Login (
+    login_id INT PRIMARY KEY AUTO_INCREMENT,
+    login_username VARCHAR(100) UNIQUE NOT NULL,
+    login_password VARCHAR(255) NOT NULL
+);
+
+-- Table: User
+CREATE TABLE User (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_name VARCHAR(100) NOT NULL,
+    user_mobile VARCHAR(20),
+    user_email VARCHAR(100) NOT NULL,
+    user_address VARCHAR(200),
+    login_id INT,
+    FOREIGN KEY (login_id) REFERENCES Login(login_id) ON DELETE CASCADE
+);
+
+-- Table: Roles
+CREATE TABLE Roles (
+    role_id INT PRIMARY KEY AUTO_INCREMENT,
+    role_name VARCHAR(100) NOT NULL,
+    role_desc VARCHAR(200)
+);
+
+-- Table: Permission
+CREATE TABLE Permission (
+    per_id INT PRIMARY KEY AUTO_INCREMENT,
+    per_module VARCHAR(100),
+    per_name VARCHAR(100)
+);
+
+-- Table: Employee
+CREATE TABLE Employee (
+    emp_id INT PRIMARY KEY AUTO_INCREMENT,
+    emp_name VARCHAR(100) NOT NULL,
+    emp_mobile VARCHAR(20),
+    emp_email VARCHAR(100),
+    emp_pass VARCHAR(100),
+    emp_add VARCHAR(200),
+    user_id INT,
+    FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE
+);
+
+-- Table: LeaveType
+CREATE TABLE LeaveType (
+    lvtype_id INT PRIMARY KEY AUTO_INCREMENT,
+    lvtype_name VARCHAR(100) NOT NULL,
+    lvtype_desc VARCHAR(200)
+);
+
+-- Table: LeaveMaster
+CREATE TABLE LeaveMaster (
+    lv_id INT PRIMARY KEY AUTO_INCREMENT,
+    emp_id INT,
+    lvtype_id INT,
+    lv_desc VARCHAR(500),
+    lv_status VARCHAR(50) DEFAULT 'Pending',
+    lv_days INT,
+    start_date DATE,
+    end_date DATE,
+    FOREIGN KEY (emp_id) REFERENCES Employee(emp_id) ON DELETE CASCADE,
+    FOREIGN KEY (lvtype_id) REFERENCES LeaveType(lvtype_id) ON DELETE CASCADE
+);
+
+-- Table: Admin (NEW - FOR ADMIN USERS)
+CREATE TABLE Admin (
+    admin_id INT PRIMARY KEY AUTO_INCREMENT,
+    admin_username VARCHAR(100) UNIQUE NOT NULL,
+    admin_password VARCHAR(255) NOT NULL,
+    admin_email VARCHAR(100),
+    admin_name VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create Indexes for better performance
+CREATE INDEX idx_login_username ON Login(login_username);
+CREATE INDEX idx_user_email ON User(user_email);
+CREATE INDEX idx_employee_user_id ON Employee(user_id);
+CREATE INDEX idx_leave_emp_id ON LeaveMaster(emp_id);
+CREATE INDEX idx_leave_status ON LeaveMaster(lv_status);
+CREATE INDEX idx_admin_username ON Admin(admin_username);
+CREATE INDEX idx_admin_email ON Admin(admin_email);

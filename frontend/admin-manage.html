@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Leaves - Admin Panel</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .navbar {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: white;
+    }
+    .navbar h2 {
+      color: white;
+    }
+    .navbar .nav-links a {
+      color: #ffc107;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-approve {
+      background: #28a745;
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .btn-approve:hover {
+      background: #218838;
+    }
+
+    .btn-reject {
+      background: #dc3545;
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .btn-reject:hover {
+      background: #c82333;
+    }
+
+    .btn-small {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+    
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .filters label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .filters select {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <div class="navbar">
+      <h2>🔐 Manage All Leave Applications</h2>
+      <div class="nav-links">
+        <a href="admin-dashboard.html">Dashboard</a>
+        <a href="admin-manage.html">Manage Leaves</a>
+        <a href="admin-change-password.html">Change Password</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>All Leave Applications</h2>
+      <div id="error" class="error"></div>
+      <div id="success" class="success"></div>
+
+      <div class="filters">
+        <label>
+          Filter by Status:
+          <select id="filterStatus">
+            <option value="">All</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="leavesList"></div>
+    </div>
+  </div>
+
+  <script src="js/admin-manage.js"></script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+-- =====================================================
+-- LEAVE MANAGEMENT SYSTEM - TRIGGERS
+-- =====================================================
+
+USE lms;
+
+-- Trigger 1: Auto-create Employee when User registers
+DELIMITER $$
+CREATE TRIGGER after_user_insert
+AFTER INSERT ON User
+FOR EACH ROW
+BEGIN
+    INSERT INTO Employee (emp_name, emp_mobile, emp_email, emp_add, user_id)
+    VALUES (NEW.user_name, NEW.user_mobile, NEW.user_email, NEW.user_address, NEW.user_id);
+END$$
+DELIMITER ;
+
+-- Trigger 2: Validate leave dates before insert
+DELIMITER $$
+CREATE TRIGGER before_leave_insert
+BEFORE INSERT ON LeaveMaster
+FOR EACH ROW
+BEGIN
+    IF NEW.end_date < NEW.start_date THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'End date cannot be before start date';
+    END IF;
+    
+    IF NEW.lv_days <= 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Leave days must be greater than 0';
+    END IF;
+END$$
+DELIMITER ;
+
+-- Trigger 3: Auto-calculate leave days
+DELIMITER $$
+CREATE TRIGGER calculate_leave_days
+BEFORE INSERT ON LeaveMaster
+FOR EACH ROW
+BEGIN
+    IF NEW.lv_days IS NULL OR NEW.lv_days = 0 THEN
+        SET NEW.lv_days = DATEDIFF(NEW.end_date, NEW.start_date) + 1;
+    END IF;
+END$$
+DELIMITER ;
+
+-- Trigger 4: Create log table for status changes
+CREATE TABLE IF NOT EXISTS LeaveStatusLog (
+    log_id INT PRIMARY KEY AUTO_INCREMENT,
+    lv_id INT,
+    old_status VARCHAR(50),
+    new_status VARCHAR(50),
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DELIMITER $$
+CREATE TRIGGER log_leave_status_change
+AFTER UPDATE ON LeaveMaster
+FOR EACH ROW
+BEGIN
+    IF OLD.lv_status != NEW.lv_status THEN
+        INSERT INTO LeaveStatusLog (lv_id, old_status, new_status)
+        VALUES (NEW.lv_id, OLD.lv_status, NEW.lv_status);
+    END IF;
+END$$
+DELIMITER ;
+
+-- Trigger 5: Prevent deletion of approved leaves
+DELIMITER $$
+CREATE TRIGGER prevent_delete_approved_leave
+BEFORE DELETE ON LeaveMaster
+FOR EACH ROW
+BEGIN
+    IF OLD.lv_status = 'Approved' THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Cannot delete approved leave applications';
+    END IF;
+END$$
+DELIMITER ;
+
+-- Trigger 6: Auto-set pending status
+DELIMITER $$
+CREATE TRIGGER set_pending_status
+BEFORE INSERT ON LeaveMaster
+FOR EACH ROW
+BEGIN
+    IF NEW.lv_status IS NULL OR NEW.lv_status = '' THEN
+        SET NEW.lv_status = 'Pending';
+    END IF;
+END$$
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER after_user_insert
+AFTER INSERT ON User
+FOR EACH ROW
+BEGIN
+  INSERT INTO Employee (emp_name, emp_mobile, emp_email, emp_add, user_id)
+  VALUES (NEW.user_name, NEW.user_mobile, NEW.user_email, NEW.user_address, NEW.user_id);
+  INSERT INTO EmployeeLeaveBalance (emp_id) VALUES (LAST_INSERT_ID());
+END //
+
+CREATE TRIGGER before_leave_insert
+BEFORE INSERT ON LeaveMaster
+FOR EACH ROW
+BEGIN
+  IF NEW.end_date < NEW.start_date THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'End date cannot be before start date';
+  END IF;
+  IF NEW.lv_days <= 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Leave days must be greater than 0';
+  END IF;
+  IF NEW.lv_status IS NULL OR NEW.lv_status = '' THEN
+    SET NEW.lv_status = 'Pending';
+  END IF;
+END //
+
+CREATE TRIGGER prevent_delete_approved_leave
+BEFORE DELETE ON LeaveMaster
+FOR EACH ROW
+BEGIN
+  IF OLD.lv_status = 'Approved' THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot delete approved leave';
+  END IF;
+END //
+
+CREATE PROCEDURE ApplyLeave(
+  IN p_emp_id INT,
+  IN p_lvtype_id INT,
+  IN p_lv_desc VARCHAR(500),
+  IN p_lv_days INT,
+  IN p_start_date DATE,
+  IN p_end_date DATE
+)
+BEGIN
+  INSERT INTO LeaveMaster (emp_id, lvtype_id, lv_desc, lv_status, lv_days, start_date, end_date)
+  VALUES (p_emp_id, p_lvtype_id, p_lv_desc, 'Pending', p_lv_days, p_start_date, p_end_date);
+END //
+
+CREATE PROCEDURE ApproveLeave(IN p_lv_id INT)
+BEGIN
+  DECLARE v_emp_id INT;
+  DECLARE v_lv_days INT;
+  SELECT emp_id, lv_days INTO v_emp_id, v_lv_days
+  FROM LeaveMaster WHERE lv_id = p_lv_id;
+  UPDATE LeaveMaster SET lv_status = 'Approved' WHERE lv_id = p_lv_id;
+  UPDATE EmployeeLeaveBalance 
+  SET used_leaves = used_leaves + v_lv_days, remaining_leaves = remaining_leaves - v_lv_days
+  WHERE emp_id = v_emp_id;
+END //
+
+CREATE PROCEDURE RejectLeave(IN p_lv_id INT)
+BEGIN
+  UPDATE LeaveMaster SET lv_status = 'Rejected' WHERE lv_id = p_lv_id;
+END //
+
+CREATE PROCEDURE GetEmployeeLeaveHistory(IN p_emp_id INT)
+BEGIN
+  SELECT lm.lv_id, lt.lvtype_name, lm.lv_days, lm.start_date, lm.end_date, lm.lv_status, lm.lv_desc
+  FROM LeaveMaster lm
+  JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+  WHERE lm.emp_id = p_emp_id
+  ORDER BY lm.lv_id DESC;
+END //
+
+CREATE FUNCTION GetRemainingLeaves(p_emp_id INT) 
+RETURNS INT
+DETERMINISTIC
+BEGIN
+  DECLARE remaining INT;
+  SELECT remaining_leaves INTO remaining
+  FROM EmployeeLeaveBalance WHERE emp_id = p_emp_id;
+  RETURN remaining;
+END //
+
+CREATE FUNCTION CanApplyLeave(p_emp_id INT, p_days INT)
+RETURNS VARCHAR(10)
+DETERMINISTIC
+BEGIN
+  DECLARE remaining INT;
+  SELECT remaining_leaves INTO remaining
+  FROM EmployeeLeaveBalance WHERE emp_id = p_emp_id;
+  IF remaining >= p_days THEN
+    RETURN 'Yes';
+  ELSE
+    RETURN 'No';
+  END IF;
+END //
+
+CREATE FUNCTION GetTotalLeaveDays(p_emp_id INT, p_status VARCHAR(50))
+RETURNS INT
+DETERMINISTIC
+BEGIN
+  DECLARE total INT;
+  SELECT COALESCE(SUM(lv_days), 0) INTO total
+  FROM LeaveMaster WHERE emp_id = p_emp_id AND lv_status = p_status;
+  RETURN total;
+END //
+
+CREATE FUNCTION GetPendingLeavesCount()
+RETURNS INT
+DETERMINISTIC
+BEGIN
+  DECLARE cnt INT;
+  SELECT COUNT(*) INTO cnt FROM LeaveMaster WHERE lv_status = 'Pending';
+  RETURN cnt;
+END //
+
+DELIMITER ;
+

@@ -1,0 +1,36 @@
+-- Use the database
+USE lms;
+
+-- Insert Leave Types
+INSERT INTO LeaveType (lvtype_name, lvtype_desc) VALUES
+('Casual Leave', 'Leave for personal work'),
+('Sick Leave', 'Leave due to illness'),
+('Encashment Leave', 'Leave that can be encashed');
+
+-- Insert Sample Users
+INSERT INTO Login (login_username, login_password) VALUES
+('john', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DvDSeO'),
+('alice', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DvDSeO'),
+('bob', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcg7b3XeKeUxWdeS86E36DvDSeO');
+
+-- Insert User Profiles
+INSERT INTO User (user_name, user_mobile, user_email, user_address, login_id) VALUES
+('John Doe', '9876543210', 'john@example.com', 'Mumbai', 1),
+('Alice Smith', '9123456789', 'alice@example.com', 'Delhi', 2),
+('Robert Brown', '9988776655', 'bob@example.com', 'Bangalore', 3);
+
+-- Insert Employees (linked to users)
+INSERT INTO Employee (emp_name, emp_mobile, emp_email, emp_pass, emp_add, user_id) VALUES
+('John Doe', '9876543210', 'john@example.com', 'password123', 'Mumbai', 1),
+('Alice Smith', '9123456789', 'alice@example.com', 'password123', 'Delhi', 2),
+('Robert Brown', '9988776655', 'bob@example.com', 'password123', 'Bangalore', 3);
+
+-- Insert Admin User
+INSERT INTO Admin (admin_username, admin_password, admin_email, admin_name) VALUES
+('admin', 'admin123', 'admin@example.com', 'Administrator');
+
+-- Insert Sample Leave Applications
+INSERT INTO LeaveMaster (emp_id, lvtype_id, lv_desc, lv_status, lv_days, start_date, end_date) VALUES
+(1, 1, 'Personal work', 'Pending', 3, '2025-11-10', '2025-11-12'),
+(2, 2, 'Sick leave', 'Approved', 2, '2025-11-08', '2025-11-09'),
+(3, 1, 'Vacation', 'Rejected', 5, '2025-11-15', '2025-11-19');

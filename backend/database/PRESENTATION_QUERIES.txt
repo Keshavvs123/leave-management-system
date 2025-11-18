@@ -1,0 +1,212 @@
+-- QUERY 1: Show all users
+SELECT 
+    u.user_id,
+    u.user_name,
+    u.user_email,
+    u.user_mobile,
+    u.user_address,
+    l.login_username
+FROM User u
+LEFT JOIN Login l ON u.login_id = l.login_id;
+
+-- QUERY 2: Show all employees
+SELECT 
+    e.emp_id,
+    e.emp_name,
+    e.emp_email,
+    e.emp_mobile,
+    e.emp_add as address,
+    u.user_name
+FROM Employee e
+LEFT JOIN User u ON e.user_id = u.user_id;
+
+-- QUERY 3: Show all leave applications
+SELECT 
+    lm.lv_id,
+    e.emp_name,
+    lt.lvtype_name as leave_type,
+    lm.lv_desc as description,
+    lm.lv_days as days,
+    lm.lv_status as status,
+    lm.start_date,
+    lm.end_date
+FROM LeaveMaster lm
+LEFT JOIN Employee e ON lm.emp_id = e.emp_id
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+ORDER BY lm.lv_id DESC;
+
+-- QUERY 4: Show pending leave applications
+SELECT 
+    lm.lv_id,
+    e.emp_name,
+    lt.lvtype_name,
+    lm.lv_days,
+    lm.start_date,
+    lm.end_date
+FROM LeaveMaster lm
+LEFT JOIN Employee e ON lm.emp_id = e.emp_id
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+WHERE lm.lv_status = 'Pending';
+
+-- QUERY 5: Show approved leaves
+SELECT 
+    lm.lv_id,
+    e.emp_name,
+    lt.lvtype_name,
+    lm.lv_days,
+    lm.start_date,
+    lm.end_date
+FROM LeaveMaster lm
+LEFT JOIN Employee e ON lm.emp_id = e.emp_id
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+WHERE lm.lv_status = 'Approved';
+
+-- QUERY 6: Show rejected leaves
+SELECT 
+    lm.lv_id,
+    e.emp_name,
+    lt.lvtype_name,
+    lm.lv_days,
+    lm.start_date,
+    lm.end_date
+FROM LeaveMaster lm
+LEFT JOIN Employee e ON lm.emp_id = e.emp_id
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+WHERE lm.lv_status = 'Rejected';
+
+-- QUERY 7: Show admin users
+SELECT 
+    admin_id,
+    admin_username,
+    admin_name,
+    admin_email,
+    created_at
+FROM Admin;
+
+-- QUERY 8: Show leaves by specific employee
+SELECT 
+    lm.lv_id,
+    e.emp_name,
+    lm.lv_desc,
+    lm.lv_days,
+    lm.lv_status,
+    lm.start_date,
+    lm.end_date,
+    lt.lvtype_name
+FROM LeaveMaster lm
+LEFT JOIN Employee e ON lm.emp_id = e.emp_id
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+WHERE lm.emp_id = 1;
+
+-- QUERY 9: Count leave applications by status
+SELECT 
+    lv_status,
+    COUNT(*) as total
+FROM LeaveMaster
+GROUP BY lv_status;
+
+-- QUERY 10: Leave statistics by leave type
+SELECT 
+    lt.lvtype_name,
+    COUNT(lm.lv_id) as total_applied,
+    SUM(CASE WHEN lm.lv_status = 'Approved' THEN 1 ELSE 0 END) as approved,
+    SUM(CASE WHEN lm.lv_status = 'Pending' THEN 1 ELSE 0 END) as pending,
+    SUM(CASE WHEN lm.lv_status = 'Rejected' THEN 1 ELSE 0 END) as rejected
+FROM LeaveMaster lm
+LEFT JOIN LeaveType lt ON lm.lvtype_id = lt.lvtype_id
+GROUP BY lt.lvtype_name;
+
+-- QUERY 11: Complete user-employee-leave relationship
+SELECT 
+    u.user_id,
+    u.user_name,
+    u.user_email,
+    e.emp_id,
+    e.emp_name,
+    e.emp_email,
+    COUNT(lm.lv_id) as total_leaves_applied
+FROM User u
+LEFT JOIN Employee e ON u.user_id = e.user_id
+LEFT JOIN LeaveMaster lm ON e.emp_id = lm.emp_id
+GROUP BY u.user_id, e.emp_id;
+
+-- QUERY 12: Show available leave types
+SELECT 
+    lvtype_id,
+    lvtype_name,
+    lvtype_desc
+FROM LeaveType;
+
+-- BONUS QUERY 1: Total days of leave taken by each employee
+SELECT 
+    e.emp_name,
+    SUM(lm.lv_days) as total_days_taken,
+    COUNT(lm.lv_id) as total_applications
+FROM Employee e
+LEFT JOIN LeaveMaster lm ON e.emp_id = lm.emp_id
+GROUP BY e.emp_id, e.emp_name;
+
+-- BONUS QUERY 2: Employees with pending leaves
+SELECT 
+    e.emp_name,
+    COUNT(lm.lv_id) as pending_count,
+    SUM(lm.lv_days) as total_pending_days
+FROM Employee e
+LEFT JOIN LeaveMaster lm ON e.emp_id = lm.emp_id AND lm.lv_status = 'Pending'
+GROUP BY e.emp_id, e.emp_name
+HAVING pending_count > 0;
+
+-- BONUS QUERY 3: Show table structure
+DESC User;
+DESC Employee;
+DESC LeaveMaster;
+DESC Admin;
+
+
+
+
+-- Show all users
+SELECT * FROM User;
+
+-- Show all employees
+SELECT * FROM Employee;
+
+-- Show all leaves
+SELECT * FROM LeaveMaster;
+
+-- Show pending leaves
+SELECT * FROM LeaveMaster WHERE lv_status = 'Pending';
+
+-- Show statistics
+SELECT lv_status, COUNT(*) FROM LeaveMaster GROUP BY lv_status;
+
+
+
+-- View all user login credentials
+SELECT 
+    login_id,
+    login_username,
+    login_password
+FROM Login;
+
+
+-- View users with their login info
+SELECT 
+    u.user_id,
+    u.user_name,
+    u.user_email,
+    l.login_username,
+    l.login_password
+FROM User u
+LEFT JOIN Login l ON u.login_id = l.login_id;
+
+
+-- View all admin credentials
+SELECT 
+    admin_id,
+    admin_username,
+    admin_password,
+    admin_email,
+    admin_name
+FROM Admin;
+

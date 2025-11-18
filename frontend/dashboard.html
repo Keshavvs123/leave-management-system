@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Leave Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <div class="navbar">
+      <h2>Leave Management System</h2>
+      <div class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="leaves.html">My Leaves</a>
+        <a href="change-password.html">Change Password</a>
+        <a href="#" id="logoutBtn">Logout</a>
+      </div>
+    </div>
+
+    <div class="welcome-card">
+      <h1>Welcome, <span id="userName"></span>! 👋</h1>
+      <p>Manage your leave applications efficiently</p>
+    </div>
+
+    <div class="leave-balance-card">
+      <h2>📊 Your Leave Balance</h2>
+      <div class="balance-grid">
+        <div class="balance-item">
+          <div class="balance-label">Total Allowed</div>
+          <span class="balance-number" id="totalAllowed">20</span>
+          <div class="balance-unit">days/year</div>
+        </div>
+        <div class="balance-item">
+          <div class="balance-label">Used Leaves</div>
+          <span class="balance-number" id="usedLeaves">0</span>
+          <div class="balance-unit">days</div>
+        </div>
+        <div class="balance-item">
+          <div class="balance-label">Remaining</div>
+          <span class="balance-number" id="remainingLeaves">20</span>
+          <div class="balance-unit">days</div>
+        </div>
+      </div>
+      
+      <div id="penaltyWarning" style="display: none;" class="penalty-warning">
+        ⚠️ <strong>Warning:</strong> You have exceeded your leave limit!
+        <br><strong>Penalty: ₹<span id="penaltyAmount">0</span></strong>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📋 My Recent Leave Applications</h2>
+      <div id="leavesList"></div>
+    </div>
+  </div>
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
